@@ -1,4 +1,4 @@
-[ whitewall ]
+[ white wall ]
 =========
 ### [ white wall ] is the web service for putting post-it on the WEB  
 [Site Here](http://whitewallnode.herokuapp.com/)  
