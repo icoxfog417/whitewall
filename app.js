@@ -27,7 +27,7 @@
 
   app.set('view engine', 'ejs');
 
-  app.use(express.favicon());
+  app.use(express.favicon(__dirname + '/public/images/favicon.ico'));
 
   app.use(express.logger('dev'));
 
