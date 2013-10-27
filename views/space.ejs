@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html ng-app="noteApp">
+  <head>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/javascripts/jquery.min.js"></script>
+    <script src="/javascripts/jquery.pep.js"></script>
+    <script src="/javascripts/hammer.min.js"></script>    
+    <script src="/javascripts/angular.min.js"></script>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script>
+        var GV = {};
+        GV.identify = <%- identify%>;
+        GV.socket = io.connect();
+        GV.pack = function(obj){
+            obj.identify = GV.identify;
+            return obj;
+        }
+       
+    </script>
+  </head>
+  <body ng-controller="PostitListCtrl">
+    <div id="myCanvas" class="content">
+      <!-- header -->
+      <div class="header">
+        <div class="pure-menu pure-menu-open pure-menu-fixed pure-menu-horizontal">
+          <div class="pure-menu-heading" style="text-transform:none">
+              <h2 style="display:inline">Room:{{identify.room}}</h3>&nbsp;&nbsp;&nbsp;welcome {{identify.name}}.
+          </div>
+          <div id="news" aling="right" class="pure-menu-heading">
+              <button ng-click="addPostit()" class="pure-button">Post!</button>
+              &nbsp;&nbsp;
+              <!-- <span id="lblNews" style="text-transform:none;font-size:0.6em">{{news}}</span> -->
+          </div>
+        </div>
+      </div>
+      <!-- content -->
+      <div style="margin-top:2.0em;"></div>
+      <div id="note-content" class="note content" ng-click="toggleEditing()">
+        <div id={{p.id}} class="postit" ng-repeat="p in postits" postit-render >
+            <div class="pheader" >
+                <div style="float:left;font-size:0.5em;background-color:honeydew;width:95%">{{identify.name}}</div>
+                <div class="post-close" ng-click="closePostit()" style="float:right">X</div>
+                <br style="clear:both"/>
+            </div>
+            <div class="section" ng-repeat="c in p.contents" >
+                <div ng-switch="c.type" >
+                    <div class="item document" ng-switch-when="0" >
+                      <div class="view" ng-show="c.value.length > 0" ng-bind-html-unsafe="escapeContent(c.value)"></div>
+                      <div class="view" ng-show="c.value.length == 0" style="color:silver">Write Text Here</div>
+                      <div class="editor">
+                          <textarea ng-Model="c.value" style="width:100%;box-sizing: border-box" ></textarea>
+                      </div>
+                    </div>
+                    <div class="link" ng-switch-when="1">
+                      {{c.value}}
+                    </div>
+                    <div class="image" ng-switch-when="2">
+                      {{c.value}}
+                    </div>
+                    <span ng-switch-else></span>
+                </div>
+            </div>
+            <div class="pfooter" >
+            </div>
+            <div ng-init="initPostit(p)"></div>
+        </div>
+    </div>
+    
+    <!-- script section -->    
+    <script src="/javascripts/postit.js"></script>
+    <script src="/javascripts/noteApp.js"></script>
+    <script src="/javascripts/noteView.js"></script>
+         
+  </body>
+</html>
