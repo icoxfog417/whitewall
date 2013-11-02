@@ -36,4 +36,8 @@ GV.socket.on 'delete',(receive)->
   $scope.$apply()
   
 GV.socket.on 'move',(receive)->
+  $scope = getScope()
+  index  = Postit.getIndexById($scope.postits,receive.id)
+  p = $scope.postits[index]
+  p.position = receive
   $("#" + receive.id).offset({top:receive.top,left:receive.left})

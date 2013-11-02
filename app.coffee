@@ -59,7 +59,7 @@ APP.getIndexOfPostit = (socket,p) ->
   findout = false
   if room of APP.PostitsInRoom
     for postit in APP.PostitsInRoom[room]
-      if p.id == postit.id then findout = true; break;
+      if p.id.toString() == postit.id.toString() then findout = true; break;
       index++
   if findout then return index; else return -1;
   
@@ -68,7 +68,7 @@ APP.updatePostits = (socket,p) ->
   if index > -1
     APP.PostitsInRoom[room].splice(index,1,p)
   else
-    if !(room of APP.PostitsInRoom) then APP.PostitsInRoom[room] = []
+    if !(room of APP.PostitsInRoom) then APP.PostitsInRoom[room] = [];
     APP.PostitsInRoom[room].push(p)  
 
 APP.deletePostits = (socket,p) ->
@@ -91,13 +91,17 @@ room = io.sockets.on('connection',(socket) ->
 
   socket.on 'move',(pos)=>
     room = APP.getClientRoom(socket)
+    index = APP.getIndexOfPostit(socket,pos)    
+    if index > -1
+      APP.PostitsInRoom[room][index].position = pos
     socket.broadcast.to(room).emit('move',pos)
 
   socket.on 'disconnect', =>
     room = APP.getClientRoom(socket)
     clients = io.sockets.clients(room)
     # if client is last client, then delete all postits in room.
-    if clients.length == 1 then delete APP.PostitsInRoom[room]
+    console.log(clients.length)
+    if clients.length <= 1 then delete APP.PostitsInRoom[room]
       
 )
 

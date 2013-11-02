@@ -54,6 +54,11 @@
   });
 
   GV.socket.on('move', function(receive) {
+    var $scope, index, p;
+    $scope = getScope();
+    index = Postit.getIndexById($scope.postits, receive.id);
+    p = $scope.postits[index];
+    p.position = receive;
     return $("#" + receive.id).offset({
       top: receive.top,
       left: receive.left

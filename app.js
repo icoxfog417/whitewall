@@ -88,7 +88,7 @@
       _ref = APP.PostitsInRoom[room];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         postit = _ref[_i];
-        if (p.id === postit.id) {
+        if (p.id.toString() === postit.id.toString()) {
           findout = true;
           break;
         }
@@ -141,14 +141,20 @@
       return socket.broadcast.to(room).emit('delete', p);
     });
     socket.on('move', function(pos) {
+      var index;
       room = APP.getClientRoom(socket);
+      index = APP.getIndexOfPostit(socket, pos);
+      if (index > -1) {
+        APP.PostitsInRoom[room][index].position = pos;
+      }
       return socket.broadcast.to(room).emit('move', pos);
     });
     return socket.on('disconnect', function() {
       var clients;
       room = APP.getClientRoom(socket);
       clients = io.sockets.clients(room);
-      if (clients.length === 1) {
+      console.log(clients.length);
+      if (clients.length <= 1) {
         return delete APP.PostitsInRoom[room];
       }
     });
