@@ -41,20 +41,63 @@ server.listen app.get('port'), ->
   console.log('Express server listening on port ' + app.get('port'))
 
 #socket.io process
-#http://stackoverflow.com/questions/10058226/send-response-to-all-clients-except-sender-socket-io
+
+#global function
+APP = {}
+APP.PostitsInRoom = []
+  
+APP.getClientRoom = (socket) ->
+  rooms = io.sockets.manager.roomClients[socket.id]
+  room = ''
+  for k ,v of rooms
+    if k.length > 0 then room = k.substr(1); break;  
+  return room
+
+APP.getIndexOfPostit = (socket,p) ->
+  rooms = APP.getClientRoom(socket)
+  index = 0
+  findout = false
+  if room of APP.PostitsInRoom
+    for postit in APP.PostitsInRoom[room]
+      if p.id == postit.id then findout = true; break;
+      index++
+  if findout then return index; else return -1;
+  
+APP.updatePostits = (socket,p) ->
+  index = APP.getIndexOfPostit(socket,p)
+  if index > -1
+    APP.PostitsInRoom[room].splice(index,1,p)
+  else
+    if !(room of APP.PostitsInRoom) then APP.PostitsInRoom[room] = []
+    APP.PostitsInRoom[room].push(p)  
+
+APP.deletePostits = (socket,p) ->
+  index = APP.getIndexOfPostit(socket,p)
+  if index > -1 then APP.PostitsInRoom[room].splice(index,1)
+  
 room = io.sockets.on('connection',(socket) -> 
   socket.on 'login',(identify)=>
     socket.join(identify.room)
     socket.broadcast.to(identify.room).emit('news',{'news':identify.name + " checkin room. "})
+    socket.emit('init',APP.PostitsInRoom[identify.room])
     
-  socket.on 'update',(data)=>
-    socket.broadcast.to(data.identify.room).emit('update',data)
+  socket.on 'update',(p)=>
+    APP.updatePostits(socket,p)
+    socket.broadcast.to(p.identify.room).emit('update',p)
 
-  socket.on 'delete',(data)=>
-    socket.broadcast.to(data.identify.room).emit('delete',data)
+  socket.on 'delete',(p)=>
+    APP.deletePostits(socket,p)
+    socket.broadcast.to(room).emit('delete',p)
 
-  socket.on 'move',(data)=>
-    socket.broadcast.to(data.identify.room).emit('move',data)
-  
+  socket.on 'move',(pos)=>
+    room = APP.getClientRoom(socket)
+    socket.broadcast.to(room).emit('move',pos)
+
+  socket.on 'disconnect', =>
+    room = APP.getClientRoom(socket)
+    clients = io.sockets.clients(room)
+    # if client is last client, then delete all postits in room.
+    if clients.length == 1 then delete APP.PostitsInRoom[room]
+      
 )
 

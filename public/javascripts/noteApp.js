@@ -18,11 +18,13 @@
           return obj.startPosition = obj.$el.offset();
         },
         drag: function(ev, obj, v) {
-          var $pos, pos;
+          var $pos, idx, pos;
           v = v || obj.velocity();
           $pos = obj.$el.offset();
           pos = new Position(obj.$el.attr("id"), $pos.top, $pos.left);
-          return _socket.emit('move', GV.pack(pos));
+          idx = Postit.getIndexById(GV.getScope().postits, obj.$el.attr("id"));
+          GV.getScope().postits[idx].position = pos;
+          return _socket.emit('move', pos);
         },
         elementsWithInteraction: false,
         constrainTo: 'parent'
@@ -40,35 +42,6 @@
     $scope.postits = [];
     $scope.identify = _identify;
     $scope.news = "";
-    $scope.find = function($p) {
-      var func, id, p, result, _i, _len, _ref;
-      id = $p.prop("id");
-      result = null;
-      func = function(x) {
-        if (id === x.id.toString()) {
-          return result = x;
-        }
-      };
-      _ref = $scope.postits;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        p = _ref[_i];
-        func(p);
-      }
-      return result;
-    };
-    $scope.indexOf = function($p) {
-      var i, id, index, _i, _ref;
-      id = $p.prop("id");
-      index = -1;
-      if ($scope.postits.length > 0) {
-        for (i = _i = 0, _ref = $scope.postits.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
-          if (id === $scope.postits[i].id.toString()) {
-            index = i;
-          }
-        }
-      }
-      return index;
-    };
     $scope.escapeContent = function(text) {
       var matches, regexToken, source, token, url, urlArray, _i, _len;
       source = (text || '').toString();
@@ -90,6 +63,7 @@
       var diff, p;
       diff = $scope.postits.length * 21;
       p = new Postit();
+      p.identify = _identify;
       p.position = {
         top: 110 + diff,
         left: 25
@@ -109,16 +83,17 @@
       } else if (!jObj.closest('.editor').length > 0) {
         jpep = new jqueryPep();
         $('.editing').closest(".postit").each(function() {
-          var p;
-          p = $scope.find($(this));
+          var idx, p;
+          idx = Postit.getIndexById($scope.postits, $(this).prop("id"));
+          p = $scope.postits[idx];
           jpep.pep($(this));
-          return _socket.emit('update', GV.pack(p));
+          return _socket.emit('update', p);
         });
         return $('.editing').removeClass('editing');
       }
     };
     return $scope.closePostit = function(dom) {
-      var idx, target;
+      var idx, removed, target;
       target = {};
       event.preventDefault();
       event.stopPropagation();
@@ -128,14 +103,13 @@
         target = $(event.target).closest('.postit');
       }
       if (target != null) {
-        idx = $scope.indexOf(target);
+        idx = Postit.getIndexById($scope.postits, target.prop("id"));
+        removed = null;
         if (idx > -1) {
-          $scope.postits.splice(idx, 1);
+          removed = $scope.postits.splice(idx, 1);
         }
-        if (dom == null) {
-          return _socket.emit('delete', GV.pack({
-            id: target.prop('id')
-          }));
+        if (removed != null) {
+          return _socket.emit('delete', removed[0]);
         }
       }
     };

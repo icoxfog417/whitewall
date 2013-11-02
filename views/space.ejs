@@ -12,11 +12,9 @@
         var GV = {};
         GV.identify = <%- identify%>;
         GV.socket = io.connect();
-        GV.pack = function(obj){
-            obj.identify = GV.identify;
-            return obj;
+        GV.getScope = function(){
+            return angular.element($("body")).scope();
         }
-       
     </script>
   </head>
   <body ng-controller="PostitListCtrl">
@@ -39,7 +37,7 @@
       <div id="note-content" class="note content" ng-click="toggleEditing()">
         <div id={{p.id}} class="postit" ng-repeat="p in postits" postit-render >
             <div class="pheader" >
-                <div style="float:left;font-size:0.5em;background-color:honeydew;width:95%">{{identify.name}}</div>
+                <div style="float:left;font-size:0.5em;background-color:honeydew;width:95%">{{p.identify.name}}</div>
                 <div class="post-close" ng-click="closePostit()" style="float:right">X</div>
                 <br style="clear:both"/>
             </div>

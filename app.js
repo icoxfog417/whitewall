@@ -5,7 +5,7 @@
 
 
 (function() {
-  var app, express, http, io, path, room, routes, server, socketio, user;
+  var APP, app, express, http, io, path, room, routes, server, socketio, user;
 
   express = require('express');
 
@@ -61,22 +61,96 @@
     return console.log('Express server listening on port ' + app.get('port'));
   });
 
+  APP = {};
+
+  APP.PostitsInRoom = [];
+
+  APP.getClientRoom = function(socket) {
+    var k, room, rooms, v;
+    rooms = io.sockets.manager.roomClients[socket.id];
+    room = '';
+    for (k in rooms) {
+      v = rooms[k];
+      if (k.length > 0) {
+        room = k.substr(1);
+        break;
+      }
+    }
+    return room;
+  };
+
+  APP.getIndexOfPostit = function(socket, p) {
+    var findout, index, postit, rooms, _i, _len, _ref;
+    rooms = APP.getClientRoom(socket);
+    index = 0;
+    findout = false;
+    if (room in APP.PostitsInRoom) {
+      _ref = APP.PostitsInRoom[room];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        postit = _ref[_i];
+        if (p.id === postit.id) {
+          findout = true;
+          break;
+        }
+        index++;
+      }
+    }
+    if (findout) {
+      return index;
+    } else {
+      return -1;
+    }
+  };
+
+  APP.updatePostits = function(socket, p) {
+    var index;
+    index = APP.getIndexOfPostit(socket, p);
+    if (index > -1) {
+      return APP.PostitsInRoom[room].splice(index, 1, p);
+    } else {
+      if (!(room in APP.PostitsInRoom)) {
+        APP.PostitsInRoom[room] = [];
+      }
+      return APP.PostitsInRoom[room].push(p);
+    }
+  };
+
+  APP.deletePostits = function(socket, p) {
+    var index;
+    index = APP.getIndexOfPostit(socket, p);
+    if (index > -1) {
+      return APP.PostitsInRoom[room].splice(index, 1);
+    }
+  };
+
   room = io.sockets.on('connection', function(socket) {
     var _this = this;
     socket.on('login', function(identify) {
       socket.join(identify.room);
-      return socket.broadcast.to(identify.room).emit('news', {
+      socket.broadcast.to(identify.room).emit('news', {
         'news': identify.name + " checkin room. "
       });
+      return socket.emit('init', APP.PostitsInRoom[identify.room]);
     });
-    socket.on('update', function(data) {
-      return socket.broadcast.to(data.identify.room).emit('update', data);
+    socket.on('update', function(p) {
+      APP.updatePostits(socket, p);
+      return socket.broadcast.to(p.identify.room).emit('update', p);
     });
-    socket.on('delete', function(data) {
-      return socket.broadcast.to(data.identify.room).emit('delete', data);
+    socket.on('delete', function(p) {
+      APP.deletePostits(socket, p);
+      return socket.broadcast.to(room).emit('delete', p);
     });
-    return socket.on('move', function(data) {
-      return socket.broadcast.to(data.identify.room).emit('move', data);
+    socket.on('move', function(pos) {
+      room = APP.getClientRoom(socket);
+      return socket.broadcast.to(room).emit('move', pos);
+    });
+    return socket.on('disconnect', function() {
+      var clients;
+      room = APP.getClientRoom(socket);
+      clients = io.sockets.clients(room);
+      if (clients.length === 1) {
+        return delete APP.PostitsInRoom[room];
+      }
     });
   });
 

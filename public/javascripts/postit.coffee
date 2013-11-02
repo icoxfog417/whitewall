@@ -8,9 +8,21 @@ class @Postit
   constructor:() ->
     @id = new Date().getTime() #make unique id
     @position = new Position(@id,0,0)
+    @identify = {}
     @contents = []
     @isDelete = false
-    
+
+  @getIndexById = (postits,id) -> 
+    index = 0
+    findout = false
+    for p in postits
+      if id.toString() == p.id.toString() then findout = true; break;
+      index++
+    return if findout then index else -1
+      
+  getIndex : (postits) -> 
+    return Postit.getIndexById(postits,@id)
+      
   toSend : (method,sender) ->
     p = new Postit(sender.id)
     switch method

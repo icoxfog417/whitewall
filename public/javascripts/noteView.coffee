@@ -1,6 +1,14 @@
 #client side event handler
 
 getScope = -> angular.element($("body")).scope();
+updatePostit = (p) -> 
+  $scope = getScope()
+  index  = Postit.getIndexById($scope.postits,p.id)
+  target = $scope.postits[index]
+  if target? 
+    target.contents = p.contents    
+  else
+    $scope.postits.push(p)
 
 #socket event handler
 GV.socket.on 'connect',()->
@@ -11,15 +19,16 @@ GV.socket.on 'news',(info)->
   $scope.news = info.news
   $scope.$apply()
 
-GV.socket.on 'update',(receive)->
-  #if receive.identify.name != _identify.name
+GV.socket.on 'init',(receive)->
   $scope = getScope()
-  target = $scope.find($("#" + receive.id))
-  if target? 
-    target.contents = receive.contents    
-  else
-    $scope.postits.push(receive)
-  $scope.$apply()
+  if receive? 
+    for p in receive
+      updatePostit(p)
+    $scope.$apply()
+
+GV.socket.on 'update',(receive)->
+  updatePostit(receive)
+  getScope().$apply()
 
 GV.socket.on 'delete',(receive)->
   $scope = getScope()

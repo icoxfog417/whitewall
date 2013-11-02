@@ -15,9 +15,33 @@
     function Postit() {
       this.id = new Date().getTime();
       this.position = new Position(this.id, 0, 0);
+      this.identify = {};
       this.contents = [];
       this.isDelete = false;
     }
+
+    Postit.getIndexById = function(postits, id) {
+      var findout, index, p, _i, _len;
+      index = 0;
+      findout = false;
+      for (_i = 0, _len = postits.length; _i < _len; _i++) {
+        p = postits[_i];
+        if (id.toString() === p.id.toString()) {
+          findout = true;
+          break;
+        }
+        index++;
+      }
+      if (findout) {
+        return index;
+      } else {
+        return -1;
+      }
+    };
+
+    Postit.prototype.getIndex = function(postits) {
+      return Postit.getIndexById(postits, this.id);
+    };
 
     Postit.prototype.toSend = function(method, sender) {
       var p;

@@ -10,7 +10,9 @@ class jqueryPep
           v = v || obj.velocity()
           $pos = obj.$el.offset();
           pos = new Position(obj.$el.attr("id"),$pos.top,$pos.left)
-          _socket.emit('move',GV.pack(pos));
+          idx = Postit.getIndexById(GV.getScope().postits,obj.$el.attr("id"))
+          GV.getScope().postits[idx].position = pos
+          _socket.emit('move',pos);
         ,
         elementsWithInteraction: false,
         constrainTo: 'parent'
@@ -24,22 +26,7 @@ noteApp.controller('PostitListCtrl',($scope) ->
   $scope.postits = []
   $scope.identify = _identify
   $scope.news = ""
-  
-  $scope.find = ($p) ->
-    id = $p.prop("id");
-    result = null
-    func = (x) -> (if id == x.id.toString() then result = x) 
-    func p for p in $scope.postits 
-    return result
-
-  $scope.indexOf = ($p) ->
-    id = $p.prop("id");
-    index = -1
-    if $scope.postits.length > 0
-      for i in [0..$scope.postits.length-1]
-        if id == $scope.postits[i].id.toString() then index = i
-    return index
-  
+    
   $scope.escapeContent = (text) ->
     source = (text || '').toString();
     urlArray = [];
@@ -65,10 +52,10 @@ noteApp.controller('PostitListCtrl',($scope) ->
   $scope.addPostit = ()-> 
     diff = $scope.postits.length * 21
     p = new Postit()
+    p.identify = _identify
     p.position = { top:110 + diff,left:25 }
     p.contents.push(new Content(ContentType.Document,""))
     $scope.postits.push(p)
-    # _socket.emit('update',GV.pack(p))
   
   $scope.toggleEditing =()->
     jObj = $(event.target)
@@ -81,9 +68,10 @@ noteApp.controller('PostitListCtrl',($scope) ->
     else if !jObj.closest('.editor').length > 0
       jpep = new jqueryPep();
       $('.editing').closest(".postit").each( ->
-        p = $scope.find($(this))
+        idx = Postit.getIndexById($scope.postits,$(this).prop("id"))
+        p = $scope.postits[idx]
         jpep.pep($(this))
-        _socket.emit('update',GV.pack(p))
+        _socket.emit('update',p)
       )
       $('.editing').removeClass('editing');
   
@@ -93,11 +81,12 @@ noteApp.controller('PostitListCtrl',($scope) ->
     event.stopPropagation();
 
     if dom? then target = dom else target = $(event.target).closest('.postit');      
-    if target? 
-      idx = $scope.indexOf(target)
-      $scope.postits.splice(idx,1) if idx > -1
-      if !dom?
-        _socket.emit('delete',GV.pack({id:target.prop('id')}))
+    if target?
+      idx = Postit.getIndexById($scope.postits,target.prop("id"))
+      removed = null
+      removed = $scope.postits.splice(idx,1) if idx > -1
+      if removed?
+        _socket.emit('delete',removed[0])
     
 )
 
