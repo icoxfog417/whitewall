@@ -57,8 +57,8 @@ noteApp.controller('PostitListCtrl',($scope) ->
     p.contents.push(new Content(ContentType.Document,""))
     $scope.postits.push(p)
   
-  $scope.toggleEditing =()->
-    jObj = $(event.target)
+  $scope.toggleEditing =($event)->
+    jObj = $($event.target)
     area = jObj.closest('.item')
     if area.length > 0
       h = area.height();
@@ -75,12 +75,13 @@ noteApp.controller('PostitListCtrl',($scope) ->
       )
       $('.editing').removeClass('editing');
   
-  $scope.closePostit = (dom) ->
+  $scope.closePostit = ($event,dom) ->
     target = {};
-    event.preventDefault();
-    event.stopPropagation();
+    if $event?
+      $event.preventDefault();
+      $event.stopPropagation();
 
-    if dom? then target = dom else target = $(event.target).closest('.postit');      
+    if dom? then target = dom else target = $($event.target).closest('.postit');      
     if target?
       idx = Postit.getIndexById($scope.postits,target.prop("id"))
       removed = null
@@ -96,11 +97,12 @@ noteApp.directive('postitRender', ->
     jqElem = angular.element(element)    
     jqElem.offset({top:scope.p.position.top,left:scope.p.position.left})
     jpep.pep(jqElem);
-    Hammer(element[0]).on("hold",->
-      scope.toggleEditing()
+    Hammer(element[0]).on("hold",(e)->
+      scope.toggleEditing(e)
     )
-    Hammer(jqElem.find(".post-close").get(0)).on("tap",->
-      scope.closePostit()
+    Hammer(jqElem.find(".post-close").get(0)).on("tap",(e)->
+      scope.closePostit(e)
+      scope.$apply()
     )
 
 )

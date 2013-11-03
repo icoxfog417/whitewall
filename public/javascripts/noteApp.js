@@ -71,9 +71,9 @@
       p.contents.push(new Content(ContentType.Document, ""));
       return $scope.postits.push(p);
     };
-    $scope.toggleEditing = function() {
+    $scope.toggleEditing = function($event) {
       var area, editor, h, jObj, jpep;
-      jObj = $(event.target);
+      jObj = $($event.target);
       area = jObj.closest('.item');
       if (area.length > 0) {
         h = area.height();
@@ -92,15 +92,17 @@
         return $('.editing').removeClass('editing');
       }
     };
-    return $scope.closePostit = function(dom) {
+    return $scope.closePostit = function($event, dom) {
       var idx, removed, target;
       target = {};
-      event.preventDefault();
-      event.stopPropagation();
+      if ($event != null) {
+        $event.preventDefault();
+        $event.stopPropagation();
+      }
       if (dom != null) {
         target = dom;
       } else {
-        target = $(event.target).closest('.postit');
+        target = $($event.target).closest('.postit');
       }
       if (target != null) {
         idx = Postit.getIndexById($scope.postits, target.prop("id"));
@@ -125,11 +127,12 @@
         left: scope.p.position.left
       });
       jpep.pep(jqElem);
-      Hammer(element[0]).on("hold", function() {
-        return scope.toggleEditing();
+      Hammer(element[0]).on("hold", function(e) {
+        return scope.toggleEditing(e);
       });
-      return Hammer(jqElem.find(".post-close").get(0)).on("tap", function() {
-        return scope.closePostit();
+      return Hammer(jqElem.find(".post-close").get(0)).on("tap", function(e) {
+        scope.closePostit(e);
+        return scope.$apply();
       });
     };
   });

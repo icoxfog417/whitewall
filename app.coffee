@@ -74,7 +74,7 @@ APP.updatePostits = (socket,p) ->
 APP.deletePostits = (socket,p) ->
   index = APP.getIndexOfPostit(socket,p)
   if index > -1 then APP.PostitsInRoom[room].splice(index,1)
-  
+
 room = io.sockets.on('connection',(socket) -> 
   socket.on 'login',(identify)=>
     socket.join(identify.room)

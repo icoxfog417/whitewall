@@ -32,7 +32,7 @@ GV.socket.on 'update',(receive)->
 
 GV.socket.on 'delete',(receive)->
   $scope = getScope()
-  $scope.closePostit($("#" + receive.id))
+  $scope.closePostit(null,$("#" + receive.id))
   $scope.$apply()
   
 GV.socket.on 'move',(receive)->

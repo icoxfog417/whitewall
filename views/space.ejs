@@ -34,11 +34,11 @@
       </div>
       <!-- content -->
       <div style="margin-top:2.0em;"></div>
-      <div id="note-content" class="note content" ng-click="toggleEditing()">
+      <div id="note-content" class="note content" ng-click="toggleEditing($event)">
         <div id={{p.id}} class="postit" ng-repeat="p in postits" postit-render >
             <div class="pheader" >
                 <div style="float:left;font-size:0.5em;background-color:honeydew;width:95%">{{p.identify.name}}</div>
-                <div class="post-close" ng-click="closePostit()" style="float:right">X</div>
+                <div class="post-close" ng-click="closePostit($event)" style="float:right">X</div>
                 <br style="clear:both"/>
             </div>
             <div class="section" ng-repeat="c in p.contents" >

@@ -49,7 +49,7 @@
   GV.socket.on('delete', function(receive) {
     var $scope;
     $scope = getScope();
-    $scope.closePostit($("#" + receive.id));
+    $scope.closePostit(null, $("#" + receive.id));
     return $scope.$apply();
   });
 
